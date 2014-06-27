@@ -18,8 +18,7 @@ void s_lock(int * lock)
 {
   while (!*lock)
   {
-    // Attempt to get out of deadlock by giving other threads breathing space
-    std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+    std::this_thread::sleep_for(std::chrono::nanoseconds(25));
   }
   (*lock)--;
 }
