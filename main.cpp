@@ -5,6 +5,11 @@
 #include <random>
 #include <chrono>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif // WIN32
+
+// Semaphore locking
 void s_lock(int * lock)
 {
   while (!*lock)
@@ -15,11 +20,13 @@ void s_lock(int * lock)
   (*lock)--;
 }
 
+// Semaphore unlocking
 void s_unlock(int * lock)
 {
   (*lock)++;
 }
 
+#ifdef __linux__
 int get_num_cores ()
 {
     FILE *cpuinfo = fopen("/proc/cpuinfo", "rb");
@@ -40,14 +47,27 @@ int get_num_cores ()
 
     return cores;
 }
+#endif
+#ifdef _WIN32
+int get_num_cores ()
+{
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo( &sysinfo );
+
+  return sysinfo.dwNumberOfProcessors;;
+}
+#endif
 
 int monte_carlo(unsigned int n, double r, double *answer, int *lock)
 {
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    // note: initialization happens only once.
+    static unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+
     const double lower_bound = 0;
     const double upper_bound = r;
     std::uniform_real_distribution<double> unif(lower_bound, upper_bound);
     std::default_random_engine re;
+    seed += std::chrono::system_clock::now().time_since_epoch().count();
     re.seed(seed);
 
     float ret = 0;
@@ -56,6 +76,9 @@ int monte_carlo(unsigned int n, double r, double *answer, int *lock)
 
     if (n == 0)
     {
+      s_lock (lock);
+      printf ("Warning: illegal arguments for monte_carlo().\nThread exiting with ret value: %f\n", ret);
+      s_unlock (lock);
       return 0;
     }
 
@@ -73,8 +96,8 @@ int monte_carlo(unsigned int n, double r, double *answer, int *lock)
 
     s_lock (lock);
     *answer += ret;
+    printf ("Thread exiting with ret value: %f\n", ret);
     s_unlock (lock);
-    printf ("thread exiting with ret value: %f\n", ret);
 
     return 0;
 }
@@ -88,7 +111,9 @@ int main()
   const float r = 10.0;
   int num_threads = 0;
 
+#if defined(__linux__) || defined(WIN32)
   std::cout << "system CPU cores: " << get_num_cores() << std::endl;
+#endif
 
   std::cout << "Enter Number of threads: " << std::endl;
   std::cin >> num_threads;
