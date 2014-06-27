@@ -9,6 +9,8 @@
 #include <windows.h>
 #endif // WIN32
 
+#define PI 3.14159265358979323846264338327950288
+
 // Semaphore locking
 void s_lock(int * lock)
 {
@@ -77,7 +79,7 @@ int monte_carlo(unsigned int n, double r, double *answer, int *lock)
     if (n == 0)
     {
       s_lock (lock);
-      printf ("Warning: illegal arguments for monte_carlo().\nThread exiting with ret value: %f\n", ret);
+      printf ("Warning: illegal arguments for monte_carlo().\nThread exiting with ret value: %.20f\n", ret);
       s_unlock (lock);
       return 0;
     }
@@ -96,7 +98,7 @@ int monte_carlo(unsigned int n, double r, double *answer, int *lock)
 
     s_lock (lock);
     *answer += ret;
-    printf ("Thread exiting with ret value: %f\n", ret);
+    printf ("Thread exiting with ret value: %.20f\n", ret);
     s_unlock (lock);
 
     return 0;
@@ -129,7 +131,10 @@ int main()
     i->join();
 
   answer /= num_threads;
-  std::cout << "Approximation of pi: " << answer << std::endl;
+
+  printf ("Approximation of pi: %.20f\n", answer);
+  printf ("Reference value: %.20f\n", PI);
+  printf ("Difference: %.20f\n", PI - answer);
 
   return 0;
 }
