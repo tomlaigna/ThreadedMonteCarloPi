@@ -11,6 +11,8 @@
 
 #define PI 3.14159265358979323846264338327950288
 
+typedef std::chrono::high_resolution_clock Clock;
+
 // Semaphore locking
 void s_lock(int * lock)
 {
@@ -124,17 +126,20 @@ int main()
   std::cin >> number_of_rands;
 
   std::cout << "Starting threads... " << std::endl;
+  auto t1 = Clock::now();
   for (int i = 0; i < num_threads; ++i)
     threads.emplace_back(monte_carlo, number_of_rands, r, &answer, &lock);
 
   for (std::vector<std::thread>::iterator i = threads.begin(); i != threads.end(); ++i)
     i->join();
+  auto t2 = Clock::now();
 
   answer /= num_threads;
 
   printf ("Approximation of pi: %.20f\n", answer);
   printf ("Reference value: %.20f\n", PI);
   printf ("Difference: %.20f\n", PI - answer);
+  printf ("Execution time: %u milliseconds \n", (t2 - t1) / 1000000);
 
   return 0;
 }
