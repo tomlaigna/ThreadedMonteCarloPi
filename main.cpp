@@ -1,14 +1,17 @@
-#include <QCoreApplication>
 #include <iostream>
 #include <stdio.h>
+#include <cstring>
 #include <thread>
 #include <random>
 #include <chrono>
 
 void s_lock(int * lock)
 {
-  while (!(*lock))
-    ;
+  while (!*lock)
+  {
+    // Attempt to get out of deadlock by giving other threads breathing space
+    std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+  }
   (*lock)--;
 }
 
@@ -38,7 +41,7 @@ int get_num_cores ()
     return cores;
 }
 
-double monte_carlo(unsigned int n, double r, double *answer, int *lock)
+int monte_carlo(unsigned int n, double r, double *answer, int *lock)
 {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     const double lower_bound = 0;
@@ -53,18 +56,17 @@ double monte_carlo(unsigned int n, double r, double *answer, int *lock)
 
     if (n == 0)
     {
-        return 0;
+      return 0;
     }
 
     for (i = 0; i < n; ++i)
     {
-        x = unif(re);
-        y = unif(re);
-//        std::cout << "x: " << x << " y: " << y << std::endl;
-        if (x * x + y * y <= r * r)
-        {
-            ++M;
-        }
+      x = unif(re);
+      y = unif(re);
+      if (x * x + y * y <= r * r)
+      {
+        ++M;
+      }
     }
 
     ret = (double)((4.0 * (double)M) / (double)n);
@@ -77,12 +79,8 @@ double monte_carlo(unsigned int n, double r, double *answer, int *lock)
     return 0;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
-//  QCoreApplication a(argc, argv);
-
-//  return a.exec();
-
   std::vector<std::thread> threads;
   double answer = 0.0;
   int lock = 1;
