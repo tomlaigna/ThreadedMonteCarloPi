@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <cstring>
 #include <thread>
+#include <mutex>
 #include <random>
 #include <chrono>
 
@@ -12,22 +13,7 @@
 #define PI 3.14159265358979323846264338327950288
 
 typedef std::chrono::high_resolution_clock Clock;
-
-// Semaphore locking
-void s_lock(int * lock)
-{
-  while (!*lock)
-  {
-    std::this_thread::sleep_for(std::chrono::nanoseconds(25));
-  }
-  (*lock)--;
-}
-
-// Semaphore unlocking
-void s_unlock(int * lock)
-{
-  (*lock)++;
-}
+std::mutex monte_carlo_mutex;
 
 #ifdef __linux__
 int get_num_cores ()
@@ -79,9 +65,9 @@ int monte_carlo(unsigned int n, double r, double *answer, int *lock)
 
     if (n == 0)
     {
-      s_lock (lock);
+      monte_carlo_mutex.lock();
       printf ("Warning: illegal arguments for monte_carlo().\nThread exiting with ret value: %.20f\n", ret);
-      s_unlock (lock);
+      monte_carlo_mutex.unlock();
       return 0;
     }
 
@@ -97,10 +83,10 @@ int monte_carlo(unsigned int n, double r, double *answer, int *lock)
 
     ret = (double)((4.0 * (double)M) / (double)n);
 
-    s_lock (lock);
+    monte_carlo_mutex.lock();
     *answer += ret;
     printf ("Thread exiting with ret value: %.20f\n", ret);
-    s_unlock (lock);
+    monte_carlo_mutex.unlock();
 
     return 0;
 }
@@ -139,6 +125,9 @@ int main()
   printf ("Reference value: %.20f\n", PI);
   printf ("Difference: %.20f\n", PI - answer);
   printf ("Execution time: %u milliseconds \n", (t2 - t1) / 1000000);
+
+  std::cin.get();
+  std::cin.get();
 
   return 0;
 }
