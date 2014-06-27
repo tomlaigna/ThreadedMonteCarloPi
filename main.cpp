@@ -111,7 +111,7 @@ int main()
   const float r = 10.0;
   int num_threads = 0;
 
-#if defined(__linux__) || defined(WIN32)
+#if defined(__linux__) || defined(_WIN32)
   std::cout << "system CPU cores: " << get_num_cores() << std::endl;
 #endif
 
