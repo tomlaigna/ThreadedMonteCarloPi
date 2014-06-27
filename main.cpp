@@ -91,7 +91,7 @@ int monte_carlo(unsigned int n, double r, double *answer, int *lock)
     return 0;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
   std::vector<std::thread> threads;
   double answer = 0.0;
