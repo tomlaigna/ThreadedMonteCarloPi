@@ -47,7 +47,7 @@ int get_num_cores ()
 }
 #endif
 
-int monte_carlo(unsigned int n, double r, double *answer, int *lock)
+int monte_carlo(unsigned int n, double r, double *answer)
 {
     // note: initialization happens only once.
     static unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -95,7 +95,6 @@ int main(int argc, char* argv[])
 {
   std::vector<std::thread> threads;
   double answer = 0.0;
-  int lock = 1;
   unsigned int number_of_rands = 0;
   const float r = 10.0;
   int num_threads = 0;
@@ -113,7 +112,7 @@ int main(int argc, char* argv[])
   std::cout << "Starting threads... " << std::endl;
   auto t1 = Clock::now();
   for (int i = 0; i < num_threads; ++i)
-    threads.emplace_back(monte_carlo, number_of_rands, r, &answer, &lock);
+    threads.emplace_back(monte_carlo, number_of_rands, r, &answer);
 
   for (std::vector<std::thread>::iterator i = threads.begin(); i != threads.end(); ++i)
     i->join();
